@@ -3,7 +3,12 @@ import { z } from 'zod'
 
 export const env = createEnv({
   server: {
-    SERVER_URL: z.string().url().optional(),
+    SERVER_URL: z.url().optional(),
+    GITHUB_CLIENT_ID: z.string(),
+    GITHUB_CLIENT_SECRET: z.string(),
+    DATABASE_URL: z.url(),
+    BETTER_AUTH_SECRET: z.string(),
+    BETTER_AUTH_URL: z.url(),
   },
 
   /**

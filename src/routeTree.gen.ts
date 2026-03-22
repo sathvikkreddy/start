@@ -9,20 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TodosRouteImport } from './routes/todos'
-import { Route as AboutRouteImport } from './routes/about'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ProtectedLayoutRouteImport } from './routes/_protectedLayout'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiTrpcSplatRouteImport } from './routes/api.trpc.$'
+import { Route as ProtectedLayoutProfileRouteImport } from './routes/_protectedLayout/profile'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ProtectedLayoutTodosTodosRouteImport } from './routes/_protectedLayout/_todos/todos'
 
-const TodosRoute = TodosRouteImport.update({
-  id: '/todos',
-  path: '/todos',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
+const ProtectedLayoutRoute = ProtectedLayoutRouteImport.update({
+  id: '/_protectedLayout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -30,69 +30,82 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
-  id: '/api/trpc/$',
-  path: '/api/trpc/$',
-  getParentRoute: () => rootRouteImport,
+const ProtectedLayoutProfileRoute = ProtectedLayoutProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => ProtectedLayoutRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProtectedLayoutTodosTodosRoute =
+  ProtectedLayoutTodosTodosRouteImport.update({
+    id: '/_todos/todos',
+    path: '/todos',
+    getParentRoute: () => ProtectedLayoutRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/todos': typeof TodosRoute
+  '/login': typeof LoginRoute
+  '/profile': typeof ProtectedLayoutProfileRoute
+  '/todos': typeof ProtectedLayoutTodosTodosRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/todos': typeof TodosRoute
+  '/login': typeof LoginRoute
+  '/profile': typeof ProtectedLayoutProfileRoute
+  '/todos': typeof ProtectedLayoutTodosTodosRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/todos': typeof TodosRoute
+  '/_protectedLayout': typeof ProtectedLayoutRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_protectedLayout/profile': typeof ProtectedLayoutProfileRoute
+  '/_protectedLayout/_todos/todos': typeof ProtectedLayoutTodosTodosRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/todos' | '/api/auth/$' | '/api/trpc/$'
+  fullPaths: '/' | '/login' | '/profile' | '/todos' | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/todos' | '/api/auth/$' | '/api/trpc/$'
-  id: '__root__' | '/' | '/about' | '/todos' | '/api/auth/$' | '/api/trpc/$'
+  to: '/' | '/login' | '/profile' | '/todos' | '/api/auth/$'
+  id:
+    | '__root__'
+    | '/'
+    | '/_protectedLayout'
+    | '/login'
+    | '/_protectedLayout/profile'
+    | '/_protectedLayout/_todos/todos'
+    | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
-  TodosRoute: typeof TodosRoute
+  ProtectedLayoutRoute: typeof ProtectedLayoutRouteWithChildren
+  LoginRoute: typeof LoginRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
-  ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/todos': {
-      id: '/todos'
-      path: '/todos'
-      fullPath: '/todos'
-      preLoaderRoute: typeof TodosRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
+    '/_protectedLayout': {
+      id: '/_protectedLayout'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ProtectedLayoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -102,12 +115,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/trpc/$': {
-      id: '/api/trpc/$'
-      path: '/api/trpc/$'
-      fullPath: '/api/trpc/$'
-      preLoaderRoute: typeof ApiTrpcSplatRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_protectedLayout/profile': {
+      id: '/_protectedLayout/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProtectedLayoutProfileRouteImport
+      parentRoute: typeof ProtectedLayoutRoute
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -116,15 +129,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_protectedLayout/_todos/todos': {
+      id: '/_protectedLayout/_todos/todos'
+      path: '/todos'
+      fullPath: '/todos'
+      preLoaderRoute: typeof ProtectedLayoutTodosTodosRouteImport
+      parentRoute: typeof ProtectedLayoutRoute
+    }
   }
 }
 
+interface ProtectedLayoutRouteChildren {
+  ProtectedLayoutProfileRoute: typeof ProtectedLayoutProfileRoute
+  ProtectedLayoutTodosTodosRoute: typeof ProtectedLayoutTodosTodosRoute
+}
+
+const ProtectedLayoutRouteChildren: ProtectedLayoutRouteChildren = {
+  ProtectedLayoutProfileRoute: ProtectedLayoutProfileRoute,
+  ProtectedLayoutTodosTodosRoute: ProtectedLayoutTodosTodosRoute,
+}
+
+const ProtectedLayoutRouteWithChildren = ProtectedLayoutRoute._addFileChildren(
+  ProtectedLayoutRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
-  TodosRoute: TodosRoute,
+  ProtectedLayoutRoute: ProtectedLayoutRouteWithChildren,
+  LoginRoute: LoginRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
-  ApiTrpcSplatRoute: ApiTrpcSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

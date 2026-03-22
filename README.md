@@ -258,8 +258,68 @@ Loaders simplify your data fetching logic dramatically. Check out more informati
 
 Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
 
+# Developer Conventions
+
+## File Naming
+
+| Suffix | Runs on | Can import `#/db` or `drizzle-orm`? | Purpose |
+|---|---|---|---|
+| `*.functions.ts` | Server only (via `createServerFn`) | ✅ Yes | Database queries, mutations, server-side logic |
+| `*.server.ts` | Server only | ✅ Yes | Middleware, server-only utilities |
+| `*.tsx` | Both (SSR + client) | ❌ No | Route definitions and React components |
+| `*.hooks.ts` | Client | ❌ No | Custom React hooks |
+| `*.queries.ts` | Client | ❌ No | TanStack Query `queryOptions` definitions |
+| `*.validators.ts` | Both | ❌ No (imports from `db/validators/`) | Zod schemas for runtime validation |
+
+> **ESLint enforces this**: Importing `#/db`, `drizzle-orm`, or `pg` in a non-server file will produce a lint error.
+
+## Folder Structure
+
+```
+src/
+├── components/           # Shared UI components
+│   ├── ui/               # shadcn primitives
+│   └── shared/           # Domain-agnostic reusable components
+├── db/
+│   ├── index.ts           # DB singleton (server-only!)
+│   ├── schema/            # Drizzle table definitions + inferred types
+│   ├── validators/        # drizzle-zod schemas for runtime validation
+│   └── seed.ts            # Dev seed data (npm run db:seed)
+├── features/              # Feature-based modules
+│   ├── todos/
+│   │   ├── todos.functions.ts  # Server functions
+│   │   ├── todos.queries.ts    # queryOptions
+│   │   ├── todos.hooks.ts      # React hooks
+│   │   └── index.ts            # Barrel re-export
+│   └── auth/
+│       ├── auth.functions.ts
+│       └── index.ts
+├── integrations/          # Third-party wrappers
+├── lib/                   # Pure utilities (no server imports)
+├── middlewares/            # TanStack middleware
+├── routes/                # File-based routing (keep thin!)
+└── styles.css
+```
+
+## Adding a New Table (Checklist)
+
+1. Create `src/db/schema/<table>-schema.ts` with the table definition and export `Insert*`/`Select*` types
+2. Add `export * from './<table>-schema.ts'` to `src/db/schema/schema.ts`
+3. Create `src/db/validators/<table>.validators.ts` using `drizzle-zod`
+4. Run `npm run db:generate && npm run db:push`
+5. Create `src/features/<feature>/` with `*.functions.ts`, `*.queries.ts`, `*.hooks.ts`, and `index.ts`
+6. Add route file(s) under `src/routes/` — import from `#/features/<feature>`
+
+## Server/Client Boundary Rules
+
+- **Route files (`*.tsx`)** should be thin: wire up `loader`, `beforeLoad`, `component`, and `head`. Business logic lives in `features/`.
+- **Never import `#/db` in a component.** Use server functions via `createServerFn` in `*.functions.ts` files.
+- **Always validate mutation inputs** with Zod using `.inputValidator(schema)`.
+- **Use `authMiddleware`** on all protected server functions.
+
 # Learn More
 
 You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
 
 For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+

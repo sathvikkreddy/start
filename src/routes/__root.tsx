@@ -5,8 +5,7 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
-import Footer from '../components/Footer'
-import Header from '../components/Header'
+import type { QueryClient } from '@tanstack/react-query'
 
 import TanStackQueryProvider from '../integrations/tanstack-query/root-provider'
 
@@ -14,15 +13,10 @@ import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 
 import appCss from '../styles.css?url'
 
-import type { QueryClient } from '@tanstack/react-query'
+import { getSession } from '#/lib/auth.functions'
 
-import type { TRPCRouter } from '#/integrations/trpc/router'
-import type { TRPCOptionsProxy } from '@trpc/tanstack-react-query'
-
-interface MyRouterContext {
+export interface MyRouterContext {
   queryClient: QueryClient
-
-  trpc: TRPCOptionsProxy<TRPCRouter>
 }
 
 const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'auto';var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var resolved=mode==='auto'?(prefersDark?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(mode==='auto'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',mode)}root.style.colorScheme=resolved;}catch(e){}})();`
@@ -49,6 +43,10 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     ],
   }),
   shellComponent: RootDocument,
+  beforeLoad: async () => {
+    const session = await getSession()
+    return { session }
+  },
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
@@ -60,9 +58,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
         <TanStackQueryProvider>
-          {/* <Header /> */}
           {children}
-          {/* <Footer /> */}
           <TanStackDevtools
             config={{
               position: 'bottom-right',
