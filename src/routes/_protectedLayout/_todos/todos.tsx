@@ -2,12 +2,10 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import { Button } from '#/components/ui/button'
-import {
-  todosQueryOptions,
-  useTodos,
-  useCreateTodo,
-} from '#/features/todos'
-import ThemeToggle from '#/components/ThemeToggle'
+import { columns } from '#/features/todos/components/columns'
+import { DataTable } from '#/components/ui/data-table/data-table'
+import { useDataTable } from '#/components/ui/data-table/use-data-table'
+import { todosQueryOptions, useTodos, useCreateTodo } from '#/features/todos'
 
 export const Route = createFileRoute('/_protectedLayout/_todos/todos')({
   component: RouteComponent,
@@ -21,10 +19,14 @@ function RouteComponent() {
   const [title, setTitle] = useState('')
   const createTodo = useCreateTodo()
 
+  const table = useDataTable({
+    data: todoList,
+    columns,
+  })
+
   return (
-    <div className="mx-auto flex max-w-md flex-col gap-4 p-6">
-      <ThemeToggle />
-      <h1 className="text-xl font-semibold">Todos ({todoList.length})</h1>
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+      <h1 className="text-2xl font-semibold">Todos ({todoList.length})</h1>
       <form
         className="flex gap-2"
         onSubmit={(e) => {
@@ -46,11 +48,14 @@ function RouteComponent() {
           Add
         </Button>
       </form>
-      <ul className="list-inside list-disc space-y-1 text-sm">
-        {todoList.map((t) => (
-          <li key={t.id}>{t.title}</li>
-        ))}
-      </ul>
+      <div className="mt-4">
+        <DataTable
+          table={table}
+          columns={columns}
+          filterKey="title"
+          filterPlaceholder="Filter todos..."
+        />
+      </div>
     </div>
   )
 }

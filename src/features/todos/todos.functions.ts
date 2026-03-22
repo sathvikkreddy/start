@@ -3,7 +3,7 @@ import { asc } from 'drizzle-orm'
 
 import { db } from '#/db'
 import { todos } from '#/db/schema/todo-schema'
-import { createTodoSchema } from '#/db/validators/todo.validators'
+import { createTodoSchema } from './todos.validators'
 import { authMiddleware } from '#/middlewares/authMiddleware'
 
 export const fetchTodos = createServerFn({ method: 'GET' })
