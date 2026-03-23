@@ -1,4 +1,8 @@
-import { flexRender, type Table as TanStackTable, type ColumnDef } from '@tanstack/react-table'
+import {
+  flexRender,
+  type Table as TanStackTable,
+  type ColumnDef,
+} from '@tanstack/react-table'
 
 import { DataTablePagination } from './data-table-pagination'
 import { DataTableViewOptions } from './data-table-view-options'
@@ -17,6 +21,10 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   filterKey?: string
   filterPlaceholder?: string
+  /** Controlled filter value (for server-side search) */
+  filterValue?: string
+  /** Controlled filter change handler (for server-side search) */
+  onFilterChange?: (value: string) => void
 }
 
 export function DataTable<TData, TValue>({
@@ -24,7 +32,24 @@ export function DataTable<TData, TValue>({
   columns,
   filterKey,
   filterPlaceholder = 'Filter...',
+  filterValue,
+  onFilterChange,
 }: DataTableProps<TData, TValue>) {
+  // Use controlled value if provided, otherwise fall back to table column filter
+  const isControlled = filterValue !== undefined && onFilterChange !== undefined
+  const currentFilterValue = isControlled
+    ? filterValue
+    : ((table.getColumn(filterKey ?? '')?.getFilterValue() as string) ?? '')
+
+  const handleFilterChange = (value: string) => {
+    if (isControlled) {
+      onFilterChange(value)
+    } else if (filterKey) {
+      table.getColumn(filterKey)?.setFilterValue(value)
+    }
+  }
+
+  console.log('Table: ', table.getRowModel().rows.length)
   return (
     <div className="space-y-4">
       {/* Toolbar */}
@@ -32,10 +57,8 @@ export function DataTable<TData, TValue>({
         {filterKey && (
           <Input
             placeholder={filterPlaceholder}
-            value={(table.getColumn(filterKey)?.getFilterValue() as string) ?? ''}
-            onChange={(event) =>
-              table.getColumn(filterKey)?.setFilterValue(event.target.value)
-            }
+            value={currentFilterValue}
+            onChange={(event) => handleFilterChange(event.target.value)}
             className="max-w-sm"
           />
         )}
@@ -55,7 +78,7 @@ export function DataTable<TData, TValue>({
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                     </TableHead>
                   )
@@ -74,7 +97,7 @@ export function DataTable<TData, TValue>({
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -82,7 +105,10 @@ export function DataTable<TData, TValue>({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
                   No results.
                 </TableCell>
               </TableRow>

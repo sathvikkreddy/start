@@ -5,23 +5,88 @@ import { Button } from '#/components/ui/button'
 import { columns } from '#/features/todos/components/columns'
 import { DataTable } from '#/components/ui/data-table/data-table'
 import { useDataTable } from '#/components/ui/data-table/use-data-table'
-import { todosQueryOptions, useTodos, useCreateTodo } from '#/features/todos'
+import { useDataTableState } from '#/components/ui/data-table/use-data-table-state'
+import type { DataTableParams } from '#/components/ui/data-table/data-table.types'
+import {
+  todosQueryOptions,
+  useTodos,
+  useCreateTodo,
+  fetchTodos,
+} from '#/features/todos'
+import { useQuery } from '@tanstack/react-query'
+import {
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
 
 export const Route = createFileRoute('/_protectedLayout/_todos/todos')({
   component: RouteComponent,
   wrapInSuspense: true,
-  loader: ({ context }) =>
-    context.queryClient.ensureQueryData(todosQueryOptions()),
+  // loader: async ({ context }) =>
+  //   await context.queryClient.ensureQueryData(todosQueryOptions()),
 })
 
 function RouteComponent() {
-  const { data: todoList } = useTodos()
   const [title, setTitle] = useState('')
   const createTodo = useCreateTodo()
+  const [search, setSearch] = useState('')
+
+  // Table state — owned here, visible to both query and table
+  const tableState = useDataTableState()
+
+  // Build server params from the state
+  const params: DataTableParams = {
+    pagination: tableState.pagination,
+    sorting: tableState.sorting.map((s) => ({ id: s.id, desc: s.desc })),
+    search: search || undefined,
+  }
+
+  const { data } = useQuery({
+    queryKey: ['todos', params],
+    queryFn: () => fetchTodos({ data: params }),
+    // placeholderData: (prev) => prev,
+  })
+  const todoList = data?.rows ?? []
+  const totalCount = data?.totalCount ?? 0
+  const pageCount = Math.ceil(totalCount / tableState.pagination.pageSize)
+
+  console.log('length', todoList.length)
 
   const table = useDataTable({
-    data: todoList,
+    data: data?.rows ?? [],
     columns,
+    state: tableState,
+    isServerSide: true,
+    pageCount,
+    getRowId: (row) => row.id.toString(),
+  })
+
+  const reactTable = useReactTable({
+    data: data?.rows ?? [],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    // getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onSortingChange: tableState.setSorting,
+    onPaginationChange: tableState.setPagination,
+    onColumnFiltersChange: tableState.setColumnFilters,
+    onColumnVisibilityChange: tableState.setColumnVisibility,
+    onRowSelectionChange: tableState.setRowSelection,
+    getRowId: (row) => row.id.toString(),
+    manualPagination: true,
+    pageCount: pageCount ?? -1,
+    autoResetPageIndex: false,
+    state: {
+      sorting: tableState.sorting,
+      pagination: tableState.pagination,
+      columnFilters: tableState.columnFilters,
+      columnVisibility: tableState.columnVisibility,
+      rowSelection: tableState.rowSelection,
+    },
   })
 
   return (
@@ -50,10 +115,15 @@ function RouteComponent() {
       </form>
       <div className="mt-4">
         <DataTable
-          table={table}
+          table={reactTable}
           columns={columns}
-          filterKey="title"
-          filterPlaceholder="Filter todos..."
+          // filterKey="title"
+          // filterPlaceholder="Search todos..."
+          // filterValue={search}
+          // onFilterChange={(value) => {
+          //   setSearch(value)
+          //   tableState.setPagination((prev) => ({ ...prev, pageIndex: 0 }))
+          // }}
         />
       </div>
     </div>

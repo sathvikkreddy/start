@@ -1,48 +1,62 @@
-import * as React from 'react'
 import {
-  type ColumnDef,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-  type ColumnFiltersState,
-  type SortingState,
-  type VisibilityState,
 } from '@tanstack/react-table'
+import type { ColumnDef } from '@tanstack/react-table'
+import type { DataTableState } from './use-data-table-state'
 
 interface UseDataTableProps<TData, TValue> {
   data: TData[]
   columns: ColumnDef<TData, TValue>[]
+  state: DataTableState
+  isServerSide?: boolean
+  pageCount?: number
+  /** Must provide a unique ID per row (e.g. DB primary key) for server-side pagination to work correctly */
+  getRowId?: (row: TData) => string
 }
 
 export function useDataTable<TData, TValue>({
   data,
   columns,
+  state,
+  isServerSide = false,
+  pageCount,
+  getRowId,
 }: UseDataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = React.useState({})
-
-  const table = useReactTable({
+  return useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
-    onColumnFiltersChange: setColumnFilters,
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
+    ...(getRowId ? { getRowId } : {}),
+    // Only use client-side row models when NOT server-side
+    ...(isServerSide
+      ? {
+          manualPagination: true,
+          manualSorting: true,
+          manualFiltering: true,
+          pageCount: pageCount ?? -1,
+          // Server controls pagination — don't auto-reset when data changes
+          autoResetPageIndex: false,
+        }
+      : {
+          getPaginationRowModel: getPaginationRowModel(),
+          getSortedRowModel: getSortedRowModel(),
+          getFilteredRowModel: getFilteredRowModel(),
+        }),
+    onSortingChange: state.setSorting,
+    onPaginationChange: state.setPagination,
+    onColumnFiltersChange: state.setColumnFilters,
+    onColumnVisibilityChange: state.setColumnVisibility,
+    onRowSelectionChange: state.setRowSelection,
     state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
+      sorting: state.sorting,
+      pagination: state.pagination,
+      columnFilters: state.columnFilters,
+      columnVisibility: state.columnVisibility,
+      rowSelection: state.rowSelection,
     },
   })
-
-  return table
 }

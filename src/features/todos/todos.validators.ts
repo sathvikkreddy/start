@@ -1,4 +1,5 @@
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
+import { z } from 'zod'
 import { todos } from '#/db/schema/todo-schema'
 
 export const insertTodoSchema = createInsertSchema(todos, {
@@ -16,4 +17,19 @@ export const updateTodoSchema = insertTodoSchema.partial({ title: true, isDone: 
   return true
 }, {
   message: 'At least one field must be provided',
+})
+
+// Data table params validation
+export const fetchTodosSchema = z.object({
+  pagination: z.object({
+    pageIndex: z.number().int().min(0),
+    pageSize: z.number().int().min(1).max(100),
+  }),
+  sorting: z.array(
+    z.object({
+      id: z.string(),
+      desc: z.boolean(),
+    })
+  ),
+  search: z.string().optional(),
 })
