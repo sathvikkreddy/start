@@ -16,7 +16,7 @@ const sortableColumns: Record<string, typeof todos.title | typeof todos.createdA
 }
 
 export const fetchTodos = createServerFn({ method: 'GET' })
-  .middleware([authMiddleware])
+  // .middleware([authMiddleware])
   .inputValidator(fetchTodosSchema)
   .handler(async ({ data: params }): Promise<PaginatedResult<SelectTodo>> => {
     const { pagination, sorting, search } = params
@@ -62,8 +62,34 @@ export const fetchTodos = createServerFn({ method: 'GET' })
     }
   })
 
+export const fetchTodosPagination = createServerFn({ method: 'GET' })
+  // .middleware([authMiddleware])
+  .inputValidator(fetchTodosSchema.pick({pagination: true}))
+  .handler(async ({ data: params }): Promise<PaginatedResult<SelectTodo>> => {
+    const { pagination } = params
+
+    // Run data query and count query in parallel
+    const [rows, totalCountResult] = await Promise.all([
+      db
+        .select()
+        .from(todos)
+        .limit(pagination.pageSize)
+        .offset(pagination.pageIndex * pagination.pageSize),
+      db
+        .select({ count: count() })
+        .from(todos)
+    ])
+
+    console.log("Made a page db call")
+
+    return {
+      rows,
+      totalCount: totalCountResult[0]?.count ?? 0,
+    }
+  })
+
 export const addTodo = createServerFn({ method: 'POST' })
-  .middleware([authMiddleware])
+  // .middleware([authMiddleware])
   .inputValidator(createTodoSchema)
   .handler(async ({ data }) => {
     await db.insert(todos).values({ title: data.title })

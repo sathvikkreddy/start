@@ -9,8 +9,8 @@ export interface DataTablePagination {
 }
 
 export interface DataTableParams {
-  pagination: DataTablePagination
-  sorting: DataTableSorting[]
+  pagination?: DataTablePagination
+  sorting?: DataTableSorting[]
   search?: string
 }
 

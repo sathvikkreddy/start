@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProtectedLayoutRouteImport } from './routes/_protectedLayout'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProtectedLayoutTableRouteImport } from './routes/_protectedLayout/table'
 import { Route as ProtectedLayoutProfileRouteImport } from './routes/_protectedLayout/profile'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ProtectedLayoutTodosTodosRouteImport } from './routes/_protectedLayout/_todos/todos'
@@ -29,6 +30,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ProtectedLayoutTableRoute = ProtectedLayoutTableRouteImport.update({
+  id: '/table',
+  path: '/table',
+  getParentRoute: () => ProtectedLayoutRoute,
 } as any)
 const ProtectedLayoutProfileRoute = ProtectedLayoutProfileRouteImport.update({
   id: '/profile',
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProtectedLayoutProfileRoute
+  '/table': typeof ProtectedLayoutTableRoute
   '/todos': typeof ProtectedLayoutTodosTodosRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -58,6 +65,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProtectedLayoutProfileRoute
+  '/table': typeof ProtectedLayoutTableRoute
   '/todos': typeof ProtectedLayoutTodosTodosRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -67,20 +75,22 @@ export interface FileRoutesById {
   '/_protectedLayout': typeof ProtectedLayoutRouteWithChildren
   '/login': typeof LoginRoute
   '/_protectedLayout/profile': typeof ProtectedLayoutProfileRoute
+  '/_protectedLayout/table': typeof ProtectedLayoutTableRoute
   '/_protectedLayout/_todos/todos': typeof ProtectedLayoutTodosTodosRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/profile' | '/todos' | '/api/auth/$'
+  fullPaths: '/' | '/login' | '/profile' | '/table' | '/todos' | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/profile' | '/todos' | '/api/auth/$'
+  to: '/' | '/login' | '/profile' | '/table' | '/todos' | '/api/auth/$'
   id:
     | '__root__'
     | '/'
     | '/_protectedLayout'
     | '/login'
     | '/_protectedLayout/profile'
+    | '/_protectedLayout/table'
     | '/_protectedLayout/_todos/todos'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
@@ -115,6 +125,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_protectedLayout/table': {
+      id: '/_protectedLayout/table'
+      path: '/table'
+      fullPath: '/table'
+      preLoaderRoute: typeof ProtectedLayoutTableRouteImport
+      parentRoute: typeof ProtectedLayoutRoute
+    }
     '/_protectedLayout/profile': {
       id: '/_protectedLayout/profile'
       path: '/profile'
@@ -141,11 +158,13 @@ declare module '@tanstack/react-router' {
 
 interface ProtectedLayoutRouteChildren {
   ProtectedLayoutProfileRoute: typeof ProtectedLayoutProfileRoute
+  ProtectedLayoutTableRoute: typeof ProtectedLayoutTableRoute
   ProtectedLayoutTodosTodosRoute: typeof ProtectedLayoutTodosTodosRoute
 }
 
 const ProtectedLayoutRouteChildren: ProtectedLayoutRouteChildren = {
   ProtectedLayoutProfileRoute: ProtectedLayoutProfileRoute,
+  ProtectedLayoutTableRoute: ProtectedLayoutTableRoute,
   ProtectedLayoutTodosTodosRoute: ProtectedLayoutTodosTodosRoute,
 }
 

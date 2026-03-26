@@ -31,11 +31,15 @@ export const columns: ColumnDef<SelectTodo>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Title" />
     ),
-    cell: ({ row }) => <div className="font-medium">{row.getValue('title')}</div>,
+    cell: ({ row }) => (
+      <div className="font-medium">{row.getValue('title')}</div>
+    ),
   },
   {
     accessorKey: 'createdAt',
-    header: 'Created At',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Created At" />
+    ),
     cell: ({ row }) => {
       const date = new Date(row.getValue('createdAt'))
       return <div>{date.toLocaleDateString()}</div>
@@ -64,7 +68,9 @@ export const columns: ColumnDef<SelectTodo>[] = [
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Edit Todo</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">Delete Todo</DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive">
+              Delete Todo
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )

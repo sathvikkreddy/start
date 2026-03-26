@@ -7,26 +7,14 @@ import { DataTable } from '#/components/ui/data-table/data-table'
 import { useDataTable } from '#/components/ui/data-table/use-data-table'
 import { useDataTableState } from '#/components/ui/data-table/use-data-table-state'
 import type { DataTableParams } from '#/components/ui/data-table/data-table.types'
-import {
-  todosQueryOptions,
-  useTodos,
-  useCreateTodo,
-  fetchTodos,
-} from '#/features/todos'
-import { useQuery } from '@tanstack/react-query'
-import {
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from '@tanstack/react-table'
+import { todosQueryOptions, useCreateTodo, fetchTodos } from '#/features/todos'
+import { useSuspenseQuery } from '@tanstack/react-query'
 
 export const Route = createFileRoute('/_protectedLayout/_todos/todos')({
   component: RouteComponent,
   wrapInSuspense: true,
-  // loader: async ({ context }) =>
-  //   await context.queryClient.ensureQueryData(todosQueryOptions()),
+  loader: async ({ context }) =>
+    await context.queryClient.ensureQueryData(todosQueryOptions()),
 })
 
 function RouteComponent() {
@@ -44,10 +32,9 @@ function RouteComponent() {
     search: search || undefined,
   }
 
-  const { data } = useQuery({
+  const { data } = useSuspenseQuery({
     queryKey: ['todos', params],
     queryFn: () => fetchTodos({ data: params }),
-    // placeholderData: (prev) => prev,
   })
   const todoList = data?.rows ?? []
   const totalCount = data?.totalCount ?? 0
@@ -56,37 +43,12 @@ function RouteComponent() {
   console.log('length', todoList.length)
 
   const table = useDataTable({
-    data: data?.rows ?? [],
+    data: data.rows,
     columns,
     state: tableState,
     isServerSide: true,
     pageCount,
     getRowId: (row) => row.id.toString(),
-  })
-
-  const reactTable = useReactTable({
-    data: data?.rows ?? [],
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    // getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onSortingChange: tableState.setSorting,
-    onPaginationChange: tableState.setPagination,
-    onColumnFiltersChange: tableState.setColumnFilters,
-    onColumnVisibilityChange: tableState.setColumnVisibility,
-    onRowSelectionChange: tableState.setRowSelection,
-    getRowId: (row) => row.id.toString(),
-    manualPagination: true,
-    pageCount: pageCount ?? -1,
-    autoResetPageIndex: false,
-    state: {
-      sorting: tableState.sorting,
-      pagination: tableState.pagination,
-      columnFilters: tableState.columnFilters,
-      columnVisibility: tableState.columnVisibility,
-      rowSelection: tableState.rowSelection,
-    },
   })
 
   return (
@@ -115,15 +77,15 @@ function RouteComponent() {
       </form>
       <div className="mt-4">
         <DataTable
-          table={reactTable}
+          table={table}
           columns={columns}
-          // filterKey="title"
-          // filterPlaceholder="Search todos..."
-          // filterValue={search}
-          // onFilterChange={(value) => {
-          //   setSearch(value)
-          //   tableState.setPagination((prev) => ({ ...prev, pageIndex: 0 }))
-          // }}
+          filterKey="title"
+          filterPlaceholder="Search todos..."
+          filterValue={search}
+          onFilterChange={(value) => {
+            setSearch(value)
+            tableState.setPagination((prev) => ({ ...prev, pageIndex: 0 }))
+          }}
         />
       </div>
     </div>

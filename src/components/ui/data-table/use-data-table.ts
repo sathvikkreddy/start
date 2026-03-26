@@ -14,7 +14,6 @@ interface UseDataTableProps<TData, TValue> {
   state: DataTableState
   isServerSide?: boolean
   pageCount?: number
-  /** Must provide a unique ID per row (e.g. DB primary key) for server-side pagination to work correctly */
   getRowId?: (row: TData) => string
 }
 
@@ -26,7 +25,7 @@ export function useDataTable<TData, TValue>({
   pageCount,
   getRowId,
 }: UseDataTableProps<TData, TValue>) {
-  return useReactTable({
+  const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
@@ -59,4 +58,12 @@ export function useDataTable<TData, TValue>({
       rowSelection: state.rowSelection,
     },
   })
+
+  // useReactTable returns a stable reference that mutates internally.
+  // React Compiler can't track mutations on a stable ref, so children
+  // that receive `table` as a prop would skip re-renders.
+  // Spreading into a new object gives a fresh reference on each render.
+  // This is safe because useReactTable only triggers re-renders on
+  // actual state changes — no unnecessary copies.
+  return { ...table } as typeof table
 }

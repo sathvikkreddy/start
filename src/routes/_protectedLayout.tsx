@@ -22,9 +22,9 @@ import {
 export const Route = createFileRoute('/_protectedLayout')({
   component: RouteComponent,
   beforeLoad: ({ context }) => {
-    if (!context.session || !context.session.user) {
-      throw redirect({ to: '/login' })
-    }
+    // if (!context.session || !context.session.user) {
+    //   throw redirect({ to: '/login' })
+    // }
     return { session: context.session }
   },
 })
@@ -46,9 +46,9 @@ function RouteComponent() {
     <SidebarProvider>
       <AppSidebar
         user={{
-          name: session.user.name,
-          email: session.user.email,
-          image: session.user.image ?? null,
+          name: session?.user?.name ?? '',
+          email: session?.user?.email ?? '',
+          image: session?.user?.image ?? null,
         }}
       />
       <SidebarInset>
