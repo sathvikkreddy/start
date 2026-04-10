@@ -15,6 +15,20 @@
       "when": 1774184918052,
       "tag": "0001_graceful_leper_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1774544414251,
+      "tag": "0002_empty_greymalkin",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1774803257654,
+      "tag": "0003_daffy_peter_quill",
+      "breakpoints": true
     }
   ]
 }

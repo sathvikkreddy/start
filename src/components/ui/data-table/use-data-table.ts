@@ -5,7 +5,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import type { ColumnDef } from '@tanstack/react-table'
+import type { ColumnDef, TableOptions } from '@tanstack/react-table'
 import type { DataTableState } from './use-data-table-state'
 
 interface UseDataTableProps<TData, TValue> {
@@ -65,5 +65,10 @@ export function useDataTable<TData, TValue>({
   // Spreading into a new object gives a fresh reference on each render.
   // This is safe because useReactTable only triggers re-renders on
   // actual state changes — no unnecessary copies.
+  return { ...table } as typeof table
+}
+
+export const useNoMemoTable = <TData>(reactTableOptions: TableOptions<TData>) => {
+  const table = useReactTable(reactTableOptions)
   return { ...table } as typeof table
 }

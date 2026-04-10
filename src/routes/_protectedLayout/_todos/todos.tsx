@@ -1,93 +1,113 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
-
-import { Button } from '#/components/ui/button'
-import { columns } from '#/features/todos/components/columns'
 import { DataTable } from '#/components/ui/data-table/data-table'
-import { useDataTable } from '#/components/ui/data-table/use-data-table'
-import { useDataTableState } from '#/components/ui/data-table/use-data-table-state'
-import type { DataTableParams } from '#/components/ui/data-table/data-table.types'
-import { todosQueryOptions, useCreateTodo, fetchTodos } from '#/features/todos'
+import { useNoMemoTable } from '#/components/ui/data-table/use-data-table'
+import type { SelectTodo } from '#/db/schema/todo-schema'
+import { todosQueryOptions } from '#/features/todos'
+import { columns } from '#/features/todos/components/columns'
+import { todosSearchSchema } from '#/features/todos/todos.validators'
 import { useSuspenseQuery } from '@tanstack/react-query'
+import { createFileRoute } from '@tanstack/react-router'
+import { getCoreRowModel } from '@tanstack/react-table'
 
 export const Route = createFileRoute('/_protectedLayout/_todos/todos')({
   component: RouteComponent,
+  validateSearch: todosSearchSchema,
+  loaderDeps({ search }) {
+    return search
+  },
+  loader: ({ context, deps }) => {
+    const searchParams = deps
+    const pagination = {
+      pageIndex: searchParams.todos_page_index,
+      pageSize: searchParams.todos_page_size,
+    }
+
+    const sorting = {
+      id: searchParams.todos_sort,
+      desc: searchParams.todos_sort_desc,
+    }
+    return context.queryClient.ensureQueryData(
+      todosQueryOptions({
+        pagination,
+        sorting,
+        search: searchParams.todos_search,
+      }),
+    )
+  },
   wrapInSuspense: true,
-  loader: async ({ context }) =>
-    await context.queryClient.ensureQueryData(todosQueryOptions()),
 })
 
 function RouteComponent() {
-  const [title, setTitle] = useState('')
-  const createTodo = useCreateTodo()
-  const [search, setSearch] = useState('')
+  const searchParams = Route.useSearch()
+  const navigate = Route.useNavigate()
 
-  // Table state — owned here, visible to both query and table
-  const tableState = useDataTableState()
-
-  // Build server params from the state
-  const params: DataTableParams = {
-    pagination: tableState.pagination,
-    sorting: tableState.sorting.map((s) => ({ id: s.id, desc: s.desc })),
-    search: search || undefined,
+  const pagination = {
+    pageIndex: searchParams.todos_page_index,
+    pageSize: searchParams.todos_page_size,
   }
 
-  const { data } = useSuspenseQuery({
-    queryKey: ['todos', params],
-    queryFn: () => fetchTodos({ data: params }),
-  })
-  const todoList = data?.rows ?? []
-  const totalCount = data?.totalCount ?? 0
-  const pageCount = Math.ceil(totalCount / tableState.pagination.pageSize)
+  const sorting = {
+    id: searchParams.todos_sort,
+    desc: searchParams.todos_sort_desc,
+  }
 
-  console.log('length', todoList.length)
+  const { data } = useSuspenseQuery(
+    todosQueryOptions({
+      pagination,
+      sorting,
+      search: searchParams.todos_search,
+    }),
+  )
 
-  const table = useDataTable({
-    data: data.rows,
+  const reactTable = useNoMemoTable<SelectTodo>({
     columns,
-    state: tableState,
-    isServerSide: true,
-    pageCount,
-    getRowId: (row) => row.id.toString(),
+    data: data?.rows ?? [],
+    getCoreRowModel: getCoreRowModel(),
+    manualPagination: true,
+    manualSorting: true,
+    enableMultiSort: false,
+    pageCount: Math.ceil((data?.totalCount ?? 0) / pagination.pageSize),
+    state: {
+      pagination,
+      sorting: [sorting],
+    },
+    onPaginationChange: (updater) => {
+      const current = {
+        pageIndex: searchParams.todos_page_index,
+        pageSize: searchParams.todos_page_size,
+      }
+      const next = typeof updater === 'function' ? updater(current) : updater
+      navigate({
+        search: (prev) => ({
+          ...prev,
+          todos_page_index: next.pageIndex,
+          todos_page_size: next.pageSize,
+        }),
+      })
+    },
+    onSortingChange: (updater) => {
+      const current = [
+        { id: searchParams.todos_sort, desc: searchParams.todos_sort_desc },
+      ]
+      const [primary] =
+        typeof updater === 'function' ? updater(current) : updater
+      navigate({
+        search: (prev) => ({
+          ...prev,
+          todos_sort: primary?.id ?? '',
+          todos_sort_desc: primary?.desc ?? false,
+          // Reset page index when sorting changes
+          todos_page_index: 0,
+        }),
+      })
+    },
   })
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
-      <h1 className="text-2xl font-semibold">Todos ({todoList.length})</h1>
-      <form
-        className="flex gap-2"
-        onSubmit={(e) => {
-          e.preventDefault()
-          const trimmed = title.trim()
-          if (!trimmed) return
-          createTodo.mutate(trimmed)
-          setTitle('')
-        }}
-      >
-        <input
-          className="border-input bg-background flex-1 rounded-md border px-3 py-2 text-sm"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="New todo"
-          aria-label="Todo title"
-        />
-        <Button type="submit" disabled={createTodo.isPending}>
-          Add
-        </Button>
-      </form>
-      <div className="mt-4">
-        <DataTable
-          table={table}
-          columns={columns}
-          filterKey="title"
-          filterPlaceholder="Search todos..."
-          filterValue={search}
-          onFilterChange={(value) => {
-            setSearch(value)
-            tableState.setPagination((prev) => ({ ...prev, pageIndex: 0 }))
-          }}
-        />
-      </div>
+    <div className="mx-auto w-full max-w-2xl">
+      <h1 className="mb-4 text-2xl font-semibold">
+        Table ({data.rows.length})
+      </h1>
+      <DataTable table={reactTable} columns={columns} />
     </div>
   )
 }

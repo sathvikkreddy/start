@@ -3,41 +3,24 @@ import { asc, count, desc, ilike } from 'drizzle-orm'
 
 import { db } from '#/db'
 import { todos } from '#/db/schema/todo-schema'
-import { createTodoSchema, fetchTodosSchema } from './todos.validators'
-import { authMiddleware } from '#/middlewares/authMiddleware'
-import type { PaginatedResult } from '#/components/ui/data-table/data-table.types'
-import type { SelectTodo } from '#/db/schema/todo-schema'
-
-// Map column id strings to actual Drizzle column references
-const sortableColumns: Record<string, typeof todos.title | typeof todos.createdAt | typeof todos.isDone> = {
-  title: todos.title,
-  createdAt: todos.createdAt,
-  isDone: todos.isDone,
-}
+import { createTodoSchema, fetchTodosSchema, todosSortableColsSchema } from './todos.validators'
 
 export const fetchTodos = createServerFn({ method: 'GET' })
   // .middleware([authMiddleware])
   .inputValidator(fetchTodosSchema)
-  .handler(async ({ data: params }): Promise<PaginatedResult<SelectTodo>> => {
+  .handler(async ({ data: params }) => {
     const { pagination, sorting, search } = params
 
     // Build WHERE conditions
     const whereCondition = search
       ? ilike(todos.title, `%${search}%`)
       : undefined
+    
+    const orderByColKey = todosSortableColsSchema.parse(sorting.id)
+    const orderByCol = todos[orderByColKey]
+    const orderBy= sorting.desc ? desc(orderByCol) : asc(orderByCol)
 
-    // Build ORDER BY from sorting array
-    const orderByColumns = sorting
-      .filter((s) => s.id in sortableColumns)
-      .map((s) => {
-        const column = sortableColumns[s.id]!
-        return s.desc ? desc(column) : asc(column)
-      })
-
-    // Default sort if none provided
-    if (orderByColumns.length === 0) {
-      orderByColumns.push(asc(todos.createdAt))
-    }
+    // throw new Error("Something went wrong")
 
     // Run data query and count query in parallel
     const [rows, totalCountResult] = await Promise.all([
@@ -45,7 +28,7 @@ export const fetchTodos = createServerFn({ method: 'GET' })
         .select()
         .from(todos)
         .where(whereCondition)
-        .orderBy(...orderByColumns)
+        .orderBy(orderBy)
         .limit(pagination.pageSize)
         .offset(pagination.pageIndex * pagination.pageSize),
       db
@@ -55,32 +38,6 @@ export const fetchTodos = createServerFn({ method: 'GET' })
     ])
 
     console.log("Made a db call")
-
-    return {
-      rows,
-      totalCount: totalCountResult[0]?.count ?? 0,
-    }
-  })
-
-export const fetchTodosPagination = createServerFn({ method: 'GET' })
-  // .middleware([authMiddleware])
-  .inputValidator(fetchTodosSchema.pick({pagination: true}))
-  .handler(async ({ data: params }): Promise<PaginatedResult<SelectTodo>> => {
-    const { pagination } = params
-
-    // Run data query and count query in parallel
-    const [rows, totalCountResult] = await Promise.all([
-      db
-        .select()
-        .from(todos)
-        .limit(pagination.pageSize)
-        .offset(pagination.pageIndex * pagination.pageSize),
-      db
-        .select({ count: count() })
-        .from(todos)
-    ])
-
-    console.log("Made a page db call")
 
     return {
       rows,

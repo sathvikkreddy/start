@@ -1,17 +1,8 @@
-import type { ColumnDef } from '@tanstack/react-table'
-import { MoreHorizontal } from 'lucide-react'
+'use no memo'
 
-import { Button } from '#/components/ui/button'
+import type { ColumnDef } from '@tanstack/react-table'
 import { Checkbox } from '#/components/ui/checkbox'
 import { DataTableColumnHeader } from '#/components/ui/data-table/data-table-column-header'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '#/components/ui/dropdown-menu'
 import type { SelectTodo } from '#/db/schema/todo-schema'
 
 export const columns: ColumnDef<SelectTodo>[] = [
@@ -20,7 +11,7 @@ export const columns: ColumnDef<SelectTodo>[] = [
     header: 'Status',
     cell: ({ row }) => (
       <Checkbox
-        checked={row.getValue('isDone')}
+        checked={row.original.isDone}
         disabled
         aria-label="Todo status"
       />
@@ -31,9 +22,7 @@ export const columns: ColumnDef<SelectTodo>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Title" />
     ),
-    cell: ({ row }) => (
-      <div className="font-medium">{row.getValue('title')}</div>
-    ),
+    cell: ({ row }) => <div className="font-medium">{row.original.title}</div>,
   },
   {
     accessorKey: 'createdAt',
@@ -41,39 +30,49 @@ export const columns: ColumnDef<SelectTodo>[] = [
       <DataTableColumnHeader column={column} title="Created At" />
     ),
     cell: ({ row }) => {
-      const date = new Date(row.getValue('createdAt'))
+      const date = new Date(row.original.createdAt)
       return <div>{date.toLocaleDateString()}</div>
     },
   },
   {
-    id: 'actions',
-    enableHiding: false,
+    accessorKey: 'updatedAt',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Updated At" />
+    ),
     cell: ({ row }) => {
-      const todo = row.original
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(todo.id.toString())}
-            >
-              Copy Todo ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Edit Todo</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">
-              Delete Todo
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
+      const date = new Date(row.original.updatedAt)
+      return <div>{date.toLocaleDateString()}</div>
     },
   },
+  // {
+  //   id: 'actions',
+  //   enableHiding: false,
+  //   cell: ({ row }) => {
+  //     const todo = row.original
+
+  //     return (
+  //       <DropdownMenu>
+  //         <DropdownMenuTrigger asChild>
+  //           <Button variant="ghost" className="h-8 w-8 p-0">
+  //             <span className="sr-only">Open menu</span>
+  //             <MoreHorizontal className="size-4" />
+  //           </Button>
+  //         </DropdownMenuTrigger>
+  //         <DropdownMenuContent align="end">
+  //           <DropdownMenuLabel>Actions</DropdownMenuLabel>
+  //           <DropdownMenuItem
+  //             onClick={() => navigator.clipboard.writeText(todo.id.toString())}
+  //           >
+  //             Copy Todo ID
+  //           </DropdownMenuItem>
+  //           <DropdownMenuSeparator />
+  //           <DropdownMenuItem>Edit Todo</DropdownMenuItem>
+  //           <DropdownMenuItem className="text-destructive">
+  //             Delete Todo
+  //           </DropdownMenuItem>
+  //         </DropdownMenuContent>
+  //       </DropdownMenu>
+  //     )
+  //   },
+  // },
 ]

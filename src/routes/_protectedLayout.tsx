@@ -21,6 +21,13 @@ import {
 
 export const Route = createFileRoute('/_protectedLayout')({
   component: RouteComponent,
+  // errorComponent: (e) => {
+  //   return (
+  //     <div className="flex justify-center items-center h-full">
+  //       <p>{e.error.message}</p>
+  //     </div>
+  //   )
+  // },
   beforeLoad: ({ context }) => {
     // if (!context.session || !context.session.user) {
     //   throw redirect({ to: '/login' })
