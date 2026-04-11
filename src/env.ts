@@ -9,6 +9,7 @@ export const env = createEnv({
     DATABASE_URL: z.url(),
     BETTER_AUTH_SECRET: z.string(),
     BETTER_AUTH_URL: z.url(),
+    AI_GATEWAY_API_KEY: z.string(),
   },
 
   /**

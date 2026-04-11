@@ -1,11 +1,12 @@
 'use no memo'
 
 import type { ColumnDef } from '@tanstack/react-table'
+import { Badge } from '#/components/ui/badge'
 import { Checkbox } from '#/components/ui/checkbox'
 import { DataTableColumnHeader } from '#/components/ui/data-table/data-table-column-header'
-import type { SelectTodo } from '#/db/schema/todo-schema'
+import type { TodoWithTags } from '#/db/schema/todo-schema'
 
-export const columns: ColumnDef<SelectTodo>[] = [
+export const columns: ColumnDef<TodoWithTags>[] = [
   {
     accessorKey: 'isDone',
     header: 'Status',
@@ -23,6 +24,23 @@ export const columns: ColumnDef<SelectTodo>[] = [
       <DataTableColumnHeader column={column} title="Title" />
     ),
     cell: ({ row }) => <div className="font-medium">{row.original.title}</div>,
+  },
+  {
+    id: 'tags',
+    header: 'Tags',
+    cell: ({ row }) => {
+      const tags = row.original.tags
+      if (!tags || tags.length === 0) return null
+      return (
+        <div className="flex flex-wrap gap-1">
+          {tags.map((tag) => (
+            <Badge key={tag.id} variant="secondary" className="text-xs">
+              {tag.name}
+            </Badge>
+          ))}
+        </div>
+      )
+    },
   },
   {
     accessorKey: 'createdAt',
@@ -44,35 +62,4 @@ export const columns: ColumnDef<SelectTodo>[] = [
       return <div>{date.toLocaleDateString()}</div>
     },
   },
-  // {
-  //   id: 'actions',
-  //   enableHiding: false,
-  //   cell: ({ row }) => {
-  //     const todo = row.original
-
-  //     return (
-  //       <DropdownMenu>
-  //         <DropdownMenuTrigger asChild>
-  //           <Button variant="ghost" className="h-8 w-8 p-0">
-  //             <span className="sr-only">Open menu</span>
-  //             <MoreHorizontal className="size-4" />
-  //           </Button>
-  //         </DropdownMenuTrigger>
-  //         <DropdownMenuContent align="end">
-  //           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-  //           <DropdownMenuItem
-  //             onClick={() => navigator.clipboard.writeText(todo.id.toString())}
-  //           >
-  //             Copy Todo ID
-  //           </DropdownMenuItem>
-  //           <DropdownMenuSeparator />
-  //           <DropdownMenuItem>Edit Todo</DropdownMenuItem>
-  //           <DropdownMenuItem className="text-destructive">
-  //             Delete Todo
-  //           </DropdownMenuItem>
-  //         </DropdownMenuContent>
-  //       </DropdownMenu>
-  //     )
-  //   },
-  // },
 ]

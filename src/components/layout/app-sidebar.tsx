@@ -15,6 +15,7 @@ import {
 } from '#/components/ui/sidebar'
 import { NavUser } from './nav-user'
 import type { FileRouteTypes } from '@/routeTree.gen'
+import { ResizablePanel } from '../ui/resizable'
 
 type AppRoute = FileRouteTypes['to']
 
@@ -25,6 +26,26 @@ const navItems: { title: string; url: AppRoute; icon: any }[] = [
     icon: ListTodo,
   },
 ]
+
+export function BuddyChatSidebar({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
+  return (
+    <ResizablePanel
+      defaultValue={'50%'}
+      maxSize={'50%'}
+      minSize={'25%'}
+      collapsible
+    >
+      <Sidebar side="right" {...props} className="w-full" buddyChat>
+        <SidebarHeader>Buddy Chat</SidebarHeader>
+        <SidebarContent>Content</SidebarContent>
+        <SidebarFooter>Footer</SidebarFooter>
+        <SidebarRail buddyChat />
+      </Sidebar>
+    </ResizablePanel>
+  )
+}
 
 export function AppSidebar({
   user,
