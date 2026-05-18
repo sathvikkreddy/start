@@ -1,5 +1,6 @@
 import * as React from 'react'
-import { cva, type VariantProps } from 'class-variance-authority'
+import { cva } from 'class-variance-authority'
+import type { VariantProps } from 'class-variance-authority'
 import { Slot } from 'radix-ui'
 
 import { useIsMobile } from '#/hooks/use-mobile'
@@ -60,7 +61,7 @@ function SidebarProvider({
   defaultBuddyChatOpen = true,
   buddyChatOpen: buddyChatOpenProp,
   onBuddyChatOpenChange: setBuddyChatOpenProp,
-  defaultOpen = true,
+  defaultOpen = false,
   open: openProp,
   onOpenChange: setOpenProp,
   className,

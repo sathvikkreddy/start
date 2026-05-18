@@ -15,8 +15,6 @@ import { TooltipProvider } from '#/components/ui/tooltip'
 
 import appCss from '../styles.css?url'
 
-import { sessionQueryOptions } from '#/features/auth'
-
 export interface MyRouterContext {
   queryClient: QueryClient
 }
@@ -45,12 +43,6 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     ],
   }),
   shellComponent: RootDocument,
-  beforeLoad: async ({ context }) => {
-    const session = await context.queryClient.ensureQueryData(
-      sessionQueryOptions(),
-    )
-    return { session }
-  },
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
@@ -63,9 +55,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
         <TanStackQueryProvider>
           <TooltipProvider>{children}</TooltipProvider>
-          {/* <TanStackDevtools
+          <TanStackDevtools
             config={{
-              position: 'top-left',
+              position: 'top-right',
             }}
             plugins={[
               {
@@ -74,7 +66,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
               },
               TanStackQueryDevtools,
             ]}
-          /> */}
+          />
         </TanStackQueryProvider>
         <Scripts />
       </body>

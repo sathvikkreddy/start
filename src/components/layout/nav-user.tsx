@@ -1,18 +1,8 @@
-import {
-  BadgeCheck,
-  LogOut,
-  Moon,
-  Sun,
-  ChevronsUpDown,
-} from 'lucide-react'
+import { BadgeCheck, LogOut, Moon, Sun, ChevronsUpDown } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '#/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '#/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,11 +26,12 @@ export function NavUser({
   user: {
     name: string
     email: string
-    image: string | null
+    image?: string | null | undefined
   }
 }) {
   const { isMobile } = useSidebar()
   const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('auto')
+  const navigate = useNavigate()
 
   useEffect(() => {
     const stored = localStorage.getItem('theme') as
@@ -62,8 +53,7 @@ export function NavUser({
     const prefersDark = window.matchMedia(
       '(prefers-color-scheme: dark)',
     ).matches
-    const resolved =
-      next === 'auto' ? (prefersDark ? 'dark' : 'light') : next
+    const resolved = next === 'auto' ? (prefersDark ? 'dark' : 'light') : next
     const root = document.documentElement
     root.classList.remove('light', 'dark')
     root.classList.add(resolved)
@@ -113,10 +103,7 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage
-                    src={user.image ?? undefined}
-                    alt={user.name}
-                  />
+                  <AvatarImage src={user.image ?? undefined} alt={user.name} />
                   <AvatarFallback className="rounded-lg">
                     {initials}
                   </AvatarFallback>
@@ -144,6 +131,7 @@ export function NavUser({
             <DropdownMenuItem
               onClick={() => {
                 void authClient.signOut()
+                navigate({ to: '/' })
               }}
             >
               <LogOut />

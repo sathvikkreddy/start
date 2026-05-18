@@ -6,7 +6,7 @@ export const getSession = createServerFn({ method: 'GET' }).handler(
   async () => {
     const headers = getRequestHeaders()
     const session = await auth.api.getSession({ headers })
-
+    console.info('Fetched session from DB')
     return session
   },
 )

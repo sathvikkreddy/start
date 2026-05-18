@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProtectedLayoutRouteImport } from './routes/_protectedLayout'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ProtectedLayoutTasksRouteImport } from './routes/_protectedLayout/tasks'
 import { Route as ProtectedLayoutProfileRouteImport } from './routes/_protectedLayout/profile'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ProtectedLayoutTodosTodosRouteImport } from './routes/_protectedLayout/_todos/todos'
@@ -36,6 +37,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProtectedLayoutTasksRoute = ProtectedLayoutTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => ProtectedLayoutRoute,
+} as any)
 const ProtectedLayoutProfileRoute = ProtectedLayoutProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProtectedLayoutProfileRoute
+  '/tasks': typeof ProtectedLayoutTasksRoute
   '/api/chat': typeof ApiChatRoute
   '/todos': typeof ProtectedLayoutTodosTodosRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProtectedLayoutProfileRoute
+  '/tasks': typeof ProtectedLayoutTasksRoute
   '/api/chat': typeof ApiChatRoute
   '/todos': typeof ProtectedLayoutTodosTodosRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   '/_protectedLayout': typeof ProtectedLayoutRouteWithChildren
   '/login': typeof LoginRoute
   '/_protectedLayout/profile': typeof ProtectedLayoutProfileRoute
+  '/_protectedLayout/tasks': typeof ProtectedLayoutTasksRoute
   '/api/chat': typeof ApiChatRoute
   '/_protectedLayout/_todos/todos': typeof ProtectedLayoutTodosTodosRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -85,17 +94,26 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/profile'
+    | '/tasks'
     | '/api/chat'
     | '/todos'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/profile' | '/api/chat' | '/todos' | '/api/auth/$'
+  to:
+    | '/'
+    | '/login'
+    | '/profile'
+    | '/tasks'
+    | '/api/chat'
+    | '/todos'
+    | '/api/auth/$'
   id:
     | '__root__'
     | '/'
     | '/_protectedLayout'
     | '/login'
     | '/_protectedLayout/profile'
+    | '/_protectedLayout/tasks'
     | '/api/chat'
     | '/_protectedLayout/_todos/todos'
     | '/api/auth/$'
@@ -139,6 +157,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_protectedLayout/tasks': {
+      id: '/_protectedLayout/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof ProtectedLayoutTasksRouteImport
+      parentRoute: typeof ProtectedLayoutRoute
+    }
     '/_protectedLayout/profile': {
       id: '/_protectedLayout/profile'
       path: '/profile'
@@ -165,11 +190,13 @@ declare module '@tanstack/react-router' {
 
 interface ProtectedLayoutRouteChildren {
   ProtectedLayoutProfileRoute: typeof ProtectedLayoutProfileRoute
+  ProtectedLayoutTasksRoute: typeof ProtectedLayoutTasksRoute
   ProtectedLayoutTodosTodosRoute: typeof ProtectedLayoutTodosTodosRoute
 }
 
 const ProtectedLayoutRouteChildren: ProtectedLayoutRouteChildren = {
   ProtectedLayoutProfileRoute: ProtectedLayoutProfileRoute,
+  ProtectedLayoutTasksRoute: ProtectedLayoutTasksRoute,
   ProtectedLayoutTodosTodosRoute: ProtectedLayoutTodosTodosRoute,
 }
 

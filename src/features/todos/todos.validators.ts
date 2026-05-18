@@ -44,26 +44,30 @@ export const updateTodoSchema = insertTodoSchema
   )
 
 // ── Route search params ────────────────────────────────────
+export const defaultTodosSearch = {
+  todos_page_index: 0,
+  todos_page_size: 10,
+  todos_sort: 'updatedAt' as const,
+  todos_sort_desc: true,
+  todos_search: '',
+}
+
+export const todosSortableColsSchema = z.enum([
+  'title',
+  'createdAt',
+  'isDone',
+  'updatedAt',
+])
 
 export const todosSearchSchema = z
   .object({
     todos_page_index: z.coerce.number().int().min(0).catch(0),
     todos_page_size: z.coerce.number().int().positive().catch(10),
-    todos_sort: z.string().catch('updatedAt'),
+    todos_sort: todosSortableColsSchema.catch('updatedAt'),
     todos_sort_desc: z.coerce.boolean().catch(true),
     todos_search: z.string().catch(''),
   })
-  .default({
-    todos_page_index: 0,
-    todos_page_size: 10,
-    todos_sort: 'updatedAt',
-    todos_sort_desc: true,
-    todos_search: '',
-  })
-
-export const todosSortableColsSchema = z
-  .enum(['title', 'createdAt', 'isDone', 'updatedAt'])
-  .catch('updatedAt')
+  .default(defaultTodosSearch)
 
 // ── Data table params validation ───────────────────────────
 
@@ -77,7 +81,7 @@ export const fetchTodosSchema = z
       .default({ pageIndex: 0, pageSize: 10 }),
     sorting: z
       .object({
-        id: z.string().optional().default('updatedAt'),
+        id: todosSortableColsSchema.default('updatedAt'),
         desc: z.boolean().optional().default(true),
       })
       .default({ id: 'updatedAt', desc: true }),

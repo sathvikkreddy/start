@@ -1,4 +1,4 @@
-import { ListTodo } from 'lucide-react'
+import { CheckCheck, ListTodo } from 'lucide-react'
 import { Link, useMatches } from '@tanstack/react-router'
 
 import {
@@ -24,6 +24,11 @@ const navItems: { title: string; url: AppRoute; icon: any }[] = [
     title: 'Todos',
     url: '/todos',
     icon: ListTodo,
+  },
+  {
+    title: 'Tasks',
+    url: '/tasks',
+    icon: CheckCheck,
   },
 ]
 
@@ -51,7 +56,7 @@ export function AppSidebar({
   user,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
-  user: { name: string; email: string; image: string | null }
+  user: { name: string; email: string; image?: string | null | undefined }
 }) {
   const matches = useMatches()
   const currentPath = matches[matches.length - 1]?.fullPath ?? '/'
