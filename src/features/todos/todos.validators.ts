@@ -66,6 +66,7 @@ export const todosSearchSchema = z
     todos_sort: todosSortableColsSchema.catch('updatedAt'),
     todos_sort_desc: z.coerce.boolean().catch(true),
     todos_search: z.string().catch(''),
+    todos_has_tags: z.coerce.boolean().optional().catch(undefined),
   })
   .default(defaultTodosSearch)
 
@@ -86,9 +87,11 @@ export const fetchTodosSchema = z
       })
       .default({ id: 'updatedAt', desc: true }),
     search: z.string().optional(),
+    hasTags: z.coerce.boolean().optional(),
   })
   .default({
     pagination: { pageIndex: 0, pageSize: 10 },
     sorting: { id: 'updatedAt', desc: true },
     search: undefined,
+    hasTags: undefined,
   })

@@ -1,26 +1,32 @@
 import { Badge } from '#/components/ui/badge'
+import { Button } from '#/components/ui/button'
 import { Checkbox } from '#/components/ui/checkbox'
-import { DataTable } from '#/components/ui/data-table/data-table'
+import { DataTable } from '#/components/ui/data-table/composable/data-table'
 import { DataTableColumnHeader } from '#/components/ui/data-table/data-table-column-header'
-import { Input } from '#/components/ui/input'
+import { Table } from '#/components/ui/table'
 import type { TodoWithTags } from '#/db/schema/todo-schema'
 import { fetchTodos } from '#/features/todos'
+import { AddTodoDialog } from '#/features/todos/components/add-todo-dialog'
 import {
-  defaultTodosSearch,
   todosSearchSchema,
   todosSortableColsSchema,
 } from '#/features/todos/todos.validators'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import type { ColumnDef } from '@tanstack/react-table'
+import { Tags } from 'lucide-react'
 import { useState } from 'react'
+import { useDebouncedCallback } from 'use-debounce'
 
 export const Route = createFileRoute('/_protectedLayout/tasks')({
   component: RouteComponent,
   validateSearch: todosSearchSchema,
+  staleTime: 30_000,
   beforeLoad: () => {
     console.info('Inside beforeLoad of tasks')
   },
+  // pendingComponent: () => <Outlet />,
+  // pendingMs: 0,
   loaderDeps: ({ search }) => {
     return {
       pageIndex: search.todos_page_index,
@@ -28,15 +34,18 @@ export const Route = createFileRoute('/_protectedLayout/tasks')({
       sortId: search.todos_sort,
       sortDesc: search.todos_sort_desc,
       query: search.todos_search,
+      hasTags: search.todos_has_tags,
     }
   },
   loader: async ({ deps }) => {
-    const { pageIndex, pageSize, sortDesc, sortId, query } = deps
+    const { pageIndex, pageSize, sortDesc, sortId, query, hasTags } = deps
+    console.info('Inside loader of tasks with deps', deps)
     return await fetchTodos({
       data: {
         pagination: { pageSize, pageIndex },
         sorting: { id: sortId, desc: sortDesc },
         search: query,
+        hasTags,
       },
     })
   },
@@ -105,6 +114,10 @@ function RouteComponent() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
 
+  const [query, setQuery] = useState(search.todos_search)
+
+  console.info('Inside RouteComponent of tasks with search data', search)
+
   const pagination = {
     pageIndex: search.todos_page_index,
     pageSize: search.todos_page_size,
@@ -112,7 +125,14 @@ function RouteComponent() {
 
   const sorting = [{ id: search.todos_sort, desc: search.todos_sort_desc }]
 
-  const [query, setQuery] = useState(search.todos_search)
+  const debouncedSearchNavigate = useDebouncedCallback(() => {
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        todos_search: query,
+      }),
+    })
+  }, 1_000)
 
   const todosTable = useReactTable<TodoWithTags>({
     data: todos.rows,
@@ -124,6 +144,7 @@ function RouteComponent() {
     state: {
       pagination,
       sorting,
+      globalFilter: query,
     },
     onPaginationChange: (updater) => {
       const nextPagination =
@@ -131,12 +152,10 @@ function RouteComponent() {
 
       navigate({
         search: (prev) => ({
-          ...defaultTodosSearch,
           ...prev,
           todos_page_index: nextPagination.pageIndex,
           todos_page_size: nextPagination.pageSize,
         }),
-        replace: true,
       })
     },
     onSortingChange: (updater) => {
@@ -145,39 +164,67 @@ function RouteComponent() {
 
       navigate({
         search: (prev) => ({
-          ...defaultTodosSearch,
           ...prev,
-          // should parse the id aganist schema to satisfy typescript as ColumnSort.id is typed as 'string' by @tanstack/react-table
+          // should parse the id against schema to satisfy typescript as ColumnSort.id is typed as 'string' by @tanstack/react-table
           todos_sort: todosSortableColsSchema.parse(newSorting.id),
           todos_sort_desc: newSorting.desc,
         }),
-        replace: true,
       })
+    },
+    onGlobalFilterChange: (updater) => {
+      const newQuery =
+        typeof updater === 'function' ? updater(sorting) : updater
+      setQuery(newQuery)
+      debouncedSearchNavigate()
+    },
+    meta: {
+      tableName: 'todos',
     },
   })
 
   return (
     <div>
-      {/* {todos.rows.map((todo) => {
-        return <div key={todo.id}>{todo.title}</div>
-      })} */}
-      <Input
-        value={query}
-        onChange={(e) => {
-          setQuery(e.target.value)
+      <DataTable
+        table={todosTable}
+        columns={todosColsDef}
+        className="flex flex-col gap-4"
+      >
+        <DataTable.Toolbar>
+          <DataTable.GlobalQuery />
+          <AddTodoDialog />
+          <Button
+            variant={
+              search.todos_has_tags !== undefined ? 'default' : 'outline'
+            }
+            size="sm"
+            onClick={() => {
+              let nextFilter: boolean | undefined = true
+              if (search.todos_has_tags === true) nextFilter = false
+              else if (search.todos_has_tags === false) nextFilter = undefined
 
-          navigate({
-            search: (prev) => ({
-              ...defaultTodosSearch,
-              ...prev,
-              // should parse the id aganist schema to satisfy typescript as ColumnSort.id is typed as 'string' by @tanstack/react-table
-              todos_search: e.target.value,
-            }),
-            replace: true,
-          })
-        }}
-      />
-      <DataTable table={todosTable} columns={todosColsDef} />
+              navigate({
+                search: (prev) => ({
+                  ...prev,
+                  todos_has_tags: nextFilter,
+                }),
+              })
+            }}
+          >
+            <Tags />{' '}
+            {search.todos_has_tags === undefined
+              ? 'All'
+              : search.todos_has_tags === true
+                ? 'With tags'
+                : 'Without tags'}
+          </Button>
+          <DataTable.ViewOptions />
+        </DataTable.Toolbar>
+        <Table>
+          <DataTable.Header />
+          <DataTable.Body />
+        </Table>
+        <DataTable.Pagination />
+      </DataTable>
     </div>
   )
 }

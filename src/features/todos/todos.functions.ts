@@ -1,5 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
-import { asc, count, desc, ilike } from 'drizzle-orm'
+import { and, asc, count, desc, exists, ilike, eq, not } from 'drizzle-orm'
 
 import { db } from '#/db'
 import { tags, todoTags, todos } from '#/db/schema/todo-schema'
@@ -13,11 +13,27 @@ import {
 export const fetchTodos = createServerFn({ method: 'GET' })
   .inputValidator(fetchTodosSchema)
   .handler(async ({ data: params }) => {
-    const { pagination, sorting, search } = params
+    const { pagination, sorting, search, hasTags } = params
 
-    const whereCondition = search
-      ? ilike(todos.title, `%${search}%`)
-      : undefined
+    let whereCondition = search ? ilike(todos.title, `%${search}%`) : undefined
+
+    if (hasTags !== undefined) {
+      whereCondition = hasTags
+        ? and(
+            whereCondition,
+            exists(
+              db.select().from(todoTags).where(eq(todoTags.todoId, todos.id)),
+            ),
+          )
+        : and(
+            whereCondition,
+            not(
+              exists(
+                db.select().from(todoTags).where(eq(todoTags.todoId, todos.id)),
+              ),
+            ),
+          )
+    }
 
     const orderByColKey = todosSortableColsSchema.parse(sorting.id)
     const orderByCol = todos[orderByColKey]
@@ -53,13 +69,11 @@ export const fetchTodos = createServerFn({ method: 'GET' })
     }
   })
 
-export const fetchTags = createServerFn({ method: 'GET' }).handler(
-  async () => {
-    return db.query.tags.findMany({
-      orderBy: asc(tags.name),
-    })
-  },
-)
+export const fetchTags = createServerFn({ method: 'GET' }).handler(async () => {
+  return db.query.tags.findMany({
+    orderBy: asc(tags.name),
+  })
+})
 
 export const createTag = createServerFn({ method: 'POST' })
   .inputValidator(createTagSchema)

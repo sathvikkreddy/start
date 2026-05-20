@@ -1,12 +1,8 @@
-import {
-  flexRender,
-  type Table as TanStackTable,
-  type ColumnDef,
-} from '@tanstack/react-table'
+import { flexRender } from '@tanstack/react-table'
+import type { Table as TanStackTable, ColumnDef } from '@tanstack/react-table'
 
 import { DataTablePagination } from './data-table-pagination'
-import { DataTableViewOptions } from './data-table-view-options'
-import { Input } from '#/components/ui/input'
+
 import {
   Table,
   TableBody,
@@ -19,40 +15,15 @@ import {
 interface DataTableProps<TData, TValue> {
   table: TanStackTable<TData>
   columns: ColumnDef<TData, TValue>[]
-  filterKey?: string
-  filterPlaceholder?: string
-  /** Controlled filter value (for server-side search) */
-  filterValue?: string
-  /** Controlled filter change handler (for server-side search) */
-  onFilterChange?: (value: string) => void
 }
 
 export function DataTable<TData, TValue>({
   table,
   columns,
-  filterKey,
-  filterPlaceholder = 'Filter...',
-  filterValue,
-  onFilterChange,
 }: DataTableProps<TData, TValue>) {
-  // Use controlled value if provided, otherwise fall back to table column filter
-  const isControlled = filterValue !== undefined && onFilterChange !== undefined
-  const currentFilterValue = isControlled
-    ? filterValue
-    : ((table.getColumn(filterKey ?? '')?.getFilterValue() as string) ?? '')
-
-  const handleFilterChange = (value: string) => {
-    if (isControlled) {
-      onFilterChange(value)
-    } else if (filterKey) {
-      table.getColumn(filterKey)?.setFilterValue(value)
-    }
-  }
-
-  console.log('Table: ', table.getRowModel().rows.length)
   return (
     <div className="space-y-4">
-      {/* Toolbar */}
+      {/* Toolbar
       <div className="flex items-center">
         {filterKey && (
           <Input
@@ -63,7 +34,7 @@ export function DataTable<TData, TValue>({
           />
         )}
         <DataTableViewOptions table={table} />
-      </div>
+      </div> */}
 
       {/* Table grid */}
       <div className="rounded-md border border-border bg-card">
@@ -87,7 +58,7 @@ export function DataTable<TData, TValue>({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}

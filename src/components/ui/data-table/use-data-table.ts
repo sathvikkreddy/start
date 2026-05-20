@@ -1,74 +1,25 @@
-import {
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from '@tanstack/react-table'
-import type { ColumnDef, TableOptions } from '@tanstack/react-table'
-import type { DataTableState } from './use-data-table-state'
+import { useReactTable } from '@tanstack/react-table'
+import type { ColumnDef, Table, TableOptions } from '@tanstack/react-table'
+import { createContext, useContext } from 'react'
 
-interface UseDataTableProps<TData, TValue> {
-  data: TData[]
-  columns: ColumnDef<TData, TValue>[]
-  state: DataTableState
-  isServerSide?: boolean
-  pageCount?: number
-  getRowId?: (row: TData) => string
+type DataTableContextType<TData> = {
+  table: Table<TData>
+  columns: ColumnDef<TData>[]
 }
 
-export function useDataTable<TData, TValue>({
-  data,
-  columns,
-  state,
-  isServerSide = false,
-  pageCount,
-  getRowId,
-}: UseDataTableProps<TData, TValue>) {
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    ...(getRowId ? { getRowId } : {}),
-    // Only use client-side row models when NOT server-side
-    ...(isServerSide
-      ? {
-          manualPagination: true,
-          manualSorting: true,
-          manualFiltering: true,
-          pageCount: pageCount ?? -1,
-          // Server controls pagination — don't auto-reset when data changes
-          autoResetPageIndex: false,
-        }
-      : {
-          getPaginationRowModel: getPaginationRowModel(),
-          getSortedRowModel: getSortedRowModel(),
-          getFilteredRowModel: getFilteredRowModel(),
-        }),
-    onSortingChange: state.setSorting,
-    onPaginationChange: state.setPagination,
-    onColumnFiltersChange: state.setColumnFilters,
-    onColumnVisibilityChange: state.setColumnVisibility,
-    onRowSelectionChange: state.setRowSelection,
-    state: {
-      sorting: state.sorting,
-      pagination: state.pagination,
-      columnFilters: state.columnFilters,
-      columnVisibility: state.columnVisibility,
-      rowSelection: state.rowSelection,
-    },
-  })
+const DataTableContext = createContext<DataTableContextType<any> | null>(null)
 
-  // useReactTable returns a stable reference that mutates internally.
-  // React Compiler can't track mutations on a stable ref, so children
-  // that receive `table` as a prop would skip re-renders.
-  // Spreading into a new object gives a fresh reference on each render.
-  // This is safe because useReactTable only triggers re-renders on
-  // actual state changes — no unnecessary copies.
-  return { ...table } as typeof table
+export function useDataTable<TData>() {
+  const context = useContext(DataTableContext)
+  if (!context) {
+    throw new Error('useDataTable must be used within DataTable')
+  }
+  return context as DataTableContextType<TData>
 }
 
-export const useNoMemoTable = <TData>(reactTableOptions: TableOptions<TData>) => {
+export const useNoMemoTable = <TData>(
+  reactTableOptions: TableOptions<TData>,
+) => {
   const table = useReactTable(reactTableOptions)
   return { ...table } as typeof table
 }
